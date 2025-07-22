@@ -14,12 +14,11 @@ class EqualizerViewModel extends ChangeNotifier {
   bool _isEQOn = true;
   EQPreset _currentPreset = EQPreset.flat;
   
-  // 5-band EQ frequencies: 60Hz, 170Hz, 310Hz, 600Hz, 1kHz, 3kHz, 6kHz, 12kHz, 14kHz, 16kHz
-  List<double> _bandValues = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; // -12dB to +12dB range (0 = no change)
+  // 5-band EQ frequencies: 60Hz, 170Hz, 1kHz, 6kHz, 16kHz
+  List<double> _bandValues = [0.0, 0.0, 0.0, 0.0, 0.0]; // -12dB to +12dB range (0 = no change)
   
   final List<String> _frequencyLabels = [
-    '60Hz', '170Hz', '310Hz', '600Hz', '1kHz', 
-    '3kHz', '6kHz', '12kHz', '14kHz', '16kHz'
+    '60Hz', '170Hz', '1kHz', '6kHz', '16kHz'
   ];
 
   // Getters
@@ -45,7 +44,7 @@ class EqualizerViewModel extends ChangeNotifier {
 
   // Reset all bands to 0
   void resetEQ() {
-    _bandValues = List.filled(10, 0.0);
+    _bandValues = List.filled(5, 0.0);
     _currentPreset = EQPreset.flat;
     notifyListeners();
   }
@@ -56,25 +55,25 @@ class EqualizerViewModel extends ChangeNotifier {
     
     switch (preset) {
       case EQPreset.flat:
-        _bandValues = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        _bandValues = [0.0, 0.0, 0.0, 0.0, 0.0];
         break;
       case EQPreset.bassBoost:
-        _bandValues = [8.0, 6.0, 4.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        _bandValues = [8.0, 6.0, 0.0, 0.0, 0.0];
         break;
       case EQPreset.trebleBoost:
-        _bandValues = [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 8.0];
+        _bandValues = [0.0, 0.0, 0.0, 6.0, 8.0];
         break;
       case EQPreset.rock:
-        _bandValues = [5.0, 3.0, -2.0, -1.0, 1.0, 3.0, 5.0, 6.0, 6.0, 6.0];
+        _bandValues = [5.0, 3.0, 1.0, 5.0, 6.0];
         break;
       case EQPreset.jazz:
-        _bandValues = [3.0, 2.0, 0.0, 1.0, 2.0, 2.0, 1.0, 2.0, 3.0, 4.0];
+        _bandValues = [3.0, 2.0, 2.0, 2.0, 4.0];
         break;
       case EQPreset.classical:
-        _bandValues = [4.0, 3.0, 2.0, 1.0, -1.0, -1.0, 0.0, 2.0, 3.0, 4.0];
+        _bandValues = [4.0, 3.0, -1.0, 2.0, 4.0];
         break;
       case EQPreset.vocalBoost:
-        _bandValues = [-1.0, 0.0, 1.0, 3.0, 5.0, 6.0, 5.0, 3.0, 1.0, 0.0];
+        _bandValues = [-1.0, 0.0, 5.0, 3.0, 0.0];
         break;
     }
     notifyListeners();
