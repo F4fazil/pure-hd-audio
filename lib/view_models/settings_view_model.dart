@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/bluetooth_service.dart';
 
-enum Language { english, italian, spanish }
+enum Language { english }
 
 class SettingsViewModel extends ChangeNotifier {
   Language _selectedLanguage = Language.english;
@@ -15,10 +15,6 @@ class SettingsViewModel extends ChangeNotifier {
     switch (_selectedLanguage) {
       case Language.english:
         return 'EN';
-      case Language.italian:
-        return 'IT';
-      case Language.spanish:
-        return 'ES';
     }
   }
 
@@ -26,10 +22,6 @@ class SettingsViewModel extends ChangeNotifier {
     switch (_selectedLanguage) {
       case Language.english:
         return 'English';
-      case Language.italian:
-        return 'Italiano';
-      case Language.spanish:
-        return 'Español';
     }
   }
 
@@ -43,17 +35,13 @@ class SettingsViewModel extends ChangeNotifier {
       switch (lang) {
         case Language.english:
           return 'English (EN)';
-        case Language.italian:
-          return 'Italiano (IT)';
-        case Language.spanish:
-          return 'Español (ES)';
       }
     }).toList();
   }
 
   // Refresh connected devices
   Future<void> refreshConnectedDevices() async {
-    await _bluetoothService.getPairedDevices();
+    await _bluetoothService.refreshWithPermissions();
     notifyListeners();
   }
 

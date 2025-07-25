@@ -494,32 +494,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(color: Colors.white12, height: 1),
               
-              // Permission status indicator
-              if (viewModel.bluetoothService.devicesList.isEmpty)
+              // Permission status indicator - only show when we have demo devices OR no devices and no permissions
+              FutureBuilder<bool>(
+                future: viewModel.bluetoothService.hasBluetoothPermissions(),
+                builder: (context, snapshot) {
+                  final hasPermissions = snapshot.data ?? false;
+                  final hasOnlyDemoDevices = viewModel.bluetoothService.devicesList.any((d) => d.name.contains('Demo'));
+                  final shouldShowWarning = hasOnlyDemoDevices || (!hasPermissions && viewModel.bluetoothService.devicesList.isEmpty);
+                  
+                  if (!shouldShowWarning) return const SizedBox.shrink();
+                  
+                  return
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Bluetooth permissions needed to detect connected devices. Grant permissions in Settings.',
-                          style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 12,
+                      Row(
+                        children: [
+                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Bluetooth permissions needed to detect your connected devices (like AirPods)',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                await viewModel.bluetoothService.openSettings();
+                                // Refresh devices after user returns from settings
+                                Future.delayed(const Duration(seconds: 1), () {
+                                  viewModel.refreshConnectedDevices();
+                                });
+                              },
+                              icon: const Icon(Icons.settings, size: 16),
+                              label: const Text('Open Settings'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange.shade700,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () => viewModel.refreshConnectedDevices(),
+                            icon: const Icon(Icons.refresh, size: 16),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2A2A2A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ),
+                );
+                },
+              ),
               
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -574,9 +631,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    // Show devices if we have any
                     if (viewModel.bluetoothService.devicesList.isNotEmpty)
                       ...viewModel.bluetoothService.devicesList.map(
                         (device) => _buildBluetoothDeviceItem(device),
+                      )
+                    else
+                      // Show empty state when permissions granted but no devices
+                      FutureBuilder<bool>(
+                        future: viewModel.bluetoothService.hasBluetoothPermissions(),
+                        builder: (context, snapshot) {
+                          final hasPermissions = snapshot.data ?? false;
+                          if (!hasPermissions) return const SizedBox.shrink();
+                          
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A2A2A),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.bluetooth_disabled,
+                                  color: Colors.white54,
+                                  size: 32,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No Bluetooth devices found',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Make sure your AirPods or headphones are connected and try scanning again.',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -599,16 +701,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isConnected
-            ? Colors.green.withOpacity(0.2)
+            ? Colors.green.withValues(alpha: 0.2)
             : isSystemDevice 
-                ? Colors.blue.withOpacity(0.1)
+                ? Colors.blue.withValues(alpha: 0.1)
                 : const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isConnected 
               ? Colors.green 
               : isSystemDevice 
-                  ? Colors.blue.withOpacity(0.5)
+                  ? Colors.blue.withValues(alpha: 0.5)
                   : Colors.white12,
           width: 1,
         ),
@@ -705,19 +807,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       case Language.english:
                         languageText = 'English (EN)';
                         break;
-                      case Language.italian:
-                        languageText = 'Italiano (IT)';
-                        break;
-                      case Language.spanish:
-                        languageText = 'Español (ES)';
-                        break;
                     }
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Colors.white.withOpacity(0.1)
+                            ? Colors.white.withValues(alpha: 0.1)
                             : const Color(0xFF2A2A2A),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
@@ -743,11 +839,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               )
                             : null,
                         onTap: () {
-                          if (language == Language.english) {
-                            viewModel.setLanguage(language);
-                          } else {
-                            _showComingSoonSnackbar(language);
-                          }
+                          viewModel.setLanguage(language);
                         },
                       ),
                     );
@@ -762,44 +854,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .slideX(begin: -0.2, end: 0);
   }
 
-  void _showComingSoonSnackbar(Language language) {
-    String languageName;
-    switch (language) {
-      case Language.italian:
-        languageName = 'Italian';
-        break;
-      case Language.spanish:
-        languageName = 'Spanish';
-        break;
-      default:
-        languageName = 'Language';
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$languageName support coming soon!',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        backgroundColor: Colors.grey.shade900,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 1),
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
-      ),
-    );
-  }
 
   Future<void> _launchWebsite() async {
     final Uri url = Uri.parse('https://silentsystem.com');
