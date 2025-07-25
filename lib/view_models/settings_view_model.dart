@@ -51,6 +51,12 @@ class SettingsViewModel extends ChangeNotifier {
     }).toList();
   }
 
+  // Refresh connected devices
+  Future<void> refreshConnectedDevices() async {
+    await _bluetoothService.getPairedDevices();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _bluetoothService.dispose();

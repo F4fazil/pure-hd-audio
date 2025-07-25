@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "description": "PURE HD AUDIO EQ Presets",
+  "bands": {
+    "count": 8,
+    "frequencies": ["60Hz", "170Hz", "310Hz", "600Hz", "1kHz", "3kHz", "6kHz", "12kHz"],
+    "range": {
+      "min": -12.0,
+      "max": 12.0,
+      "unit": "dB"
+    }
+  },
+  "presets": [
+    {
+      "id": "bassup",
+      "name": "Bass Up",
+      "description": "🎧 Bass Up Emphasizes deep bass while cutting highs. Perfect for bass lovers and electronic beats.",
+      "values": [9.0, 7.0, 5.0, 2.0, 0.0, -2.0, -4.0, -6.0]
+    },
+    {
+      "id": "hifi",
+      "name": "Hi-Fi",
+      "description": "🎧 Hi-Fi Clear and detailed response with an open high-frequency range. Pure high-definition listening.",
+      "values": [1.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+    },
+    {
+      "id": "deep",
+      "name": "Deep EQ",
+      "description": "🎧 Deep EQ Warm and deep profile. Strong low-end, softened highs for a smooth experience.",
+      "values": [8.0, 6.0, 4.0, 2.0, 1.0, 0.0, -1.0, -2.0]
+    },
+    {
+      "id": "vibe",
+      "name": "Vibe+",
+      "description": "🎧 Vibe+ Balanced and energetic. Slight boost to bass and treble for vibrant sound.",
+      "values": [4.0, 2.0, 1.0, 0.0, 1.0, 2.0, 4.0, 5.0]
+    },
+    {
+      "id": "stage",
+      "name": "Stage",
+      "description": "🎧 Stage Designed for live feel. Accentuates mids and highs for instruments and vocals.",
+      "values": [0.0, 1.0, 3.0, 5.0, 4.0, 3.0, 4.0, 3.0]
+    },
+    {
+      "id": "warmth",
+      "name": "Warmth",
+      "description": "🎧 Warmth Soft and cozy tone. Emphasizes lows and mids for a vintage warmth.",
+      "values": [5.0, 4.0, 3.0, 3.0, 2.0, 1.0, 0.0, -1.0]
+    },
+    {
+      "id": "clarity",
+      "name": "Clarity",
+      "description": "🎧 Clarity Crisp and clean. High-frequency boost ensures maximum detail and sharpness.",
+      "values": [-1.0, 0.0, 1.0, 2.0, 3.0, 5.0, 7.0, 8.0]
+    },
+    {
+      "id": "retro",
+      "name": "Retro",
+      "description": "🎧 Retro Inspired by analog curves. Smooth and nostalgic with slight mid-cut.",
+      "values": [3.0, 2.0, 1.0, -1.0, -2.0, 0.0, 2.0, 3.0]
+    }
+  ]
+}

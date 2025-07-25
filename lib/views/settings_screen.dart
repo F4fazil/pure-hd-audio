@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/mock_bluetooth_device.dart';
+import '../services/audio_player_service.dart';
 import '../view_models/settings_view_model.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -14,16 +15,23 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late SettingsViewModel viewModel;
+  late AudioPlayerService audioPlayerService;
 
   @override
   void initState() {
     super.initState();
     viewModel = SettingsViewModel();
+    audioPlayerService = AudioPlayerService.instance;
+    // Refresh connected devices when settings screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel.refreshConnectedDevices();
+    });
   }
 
   @override
   void dispose() {
     viewModel.dispose();
+    // Don't dispose the singleton audio service
     super.dispose();
   }
 
@@ -80,6 +88,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context, child) {
                     return ListView(
                       children: [
+                        // Music Player Section
+                        _buildMusicPlayerSection(),
+
+                        const SizedBox(height: 20),
+
                         // Bluetooth Device Selection
                         _buildBluetoothSection(),
 
@@ -90,6 +103,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         const SizedBox(height: 20),
 
+                        // Spotify Playlist
+                        _buildSettingItem(
+                              icon: Icons.library_music,
+                              title: 'Spotify Playlists',
+                              subtitle: 'Access curated playlists for HD audio',
+                              onTap: _launchSpotifyPlaylist,
+                            )
+                            .animate()
+                            .fadeIn(duration: 800.ms, delay: 600.ms)
+                            .slideX(begin: -0.2, end: 0),
+
                         // Website Link
                         _buildSettingItem(
                               icon: Icons.language,
@@ -98,9 +122,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: _launchWebsite,
                             )
                             .animate()
-                            .fadeIn(duration: 800.ms, delay: 600.ms)
+                            .fadeIn(duration: 800.ms, delay: 650.ms)
                             .slideX(begin: -0.2, end: 0),
 
+                        // EQ Info
+                        _buildSettingItem(
+                              icon: Icons.info_outline,
+                              title: 'EQ Presets Info',
+                              subtitle: 'Learn about equalizer presets',
+                              onTap: () => _showEQInfoDialog(context),
+                            )
+                            .animate()
+                            .fadeIn(duration: 800.ms, delay: 700.ms)
+                            .slideX(begin: -0.2, end: 0),
+                        
                         // Equalizer
                         _buildSettingItem(
                               icon: Icons.equalizer,
@@ -109,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: () => context.pop(),
                             )
                             .animate()
-                            .fadeIn(duration: 800.ms, delay: 700.ms)
+                            .fadeIn(duration: 800.ms, delay: 750.ms)
                             .slideX(begin: -0.2, end: 0),
 
                         // App Version Info
@@ -120,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: () => _showAboutDialog(context),
                             )
                             .animate()
-                            .fadeIn(duration: 800.ms, delay: 800.ms)
+                            .fadeIn(duration: 800.ms, delay: 750.ms)
                             .slideX(begin: -0.2, end: 0),
                       ],
                     );
@@ -132,6 +167,293 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildMusicPlayerSection() {
+    return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white12, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.music_note,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                title: const Text(
+                  'Music Player',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  '432Hz Audio Tracks',
+                  style: const TextStyle(color: Colors.white60, fontSize: 14),
+                ),
+              ),
+              const Divider(color: Colors.white12, height: 1),
+              
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Current track info
+                    ListenableBuilder(
+                      listenable: audioPlayerService,
+                      builder: (context, child) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A2A2A),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              if (audioPlayerService.currentTrack != null) ...[
+                                Text(
+                                  audioPlayerService.currentTrack!.title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  audioPlayerService.currentTrack?.artist ?? 'Unknown Artist',
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                // Progress bar
+                                SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    trackHeight: 2,
+                                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                                    activeTrackColor: Colors.white,
+                                    inactiveTrackColor: Colors.white24,
+                                    thumbColor: Colors.white,
+                                  ),
+                                  child: Slider(
+                                    value: audioPlayerService.progress,
+                                    onChanged: (value) {
+                                      final position = Duration(
+                                        milliseconds: (value * audioPlayerService.duration.inMilliseconds).round(),
+                                      );
+                                      audioPlayerService.seek(position);
+                                    },
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _formatDuration(audioPlayerService.position),
+                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                    ),
+                                    Text(
+                                      _formatDuration(audioPlayerService.duration),
+                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ] else ...[
+                                const Icon(
+                                  Icons.music_off,
+                                  color: Colors.white54,
+                                  size: 32,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'No track selected',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Control buttons
+                    ListenableBuilder(
+                      listenable: audioPlayerService,
+                      builder: (context, child) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Previous button
+                            IconButton(
+                              onPressed: audioPlayerService.currentPlaylist.isNotEmpty
+                                  ? () => audioPlayerService.previousTrack()
+                                  : null,
+                              icon: const Icon(Icons.skip_previous),
+                              color: Colors.white,
+                              iconSize: 32,
+                            ),
+                            
+                            // Play/pause button
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                onPressed: audioPlayerService.currentTrack != null
+                                    ? () => audioPlayerService.togglePlayPause()
+                                    : null,
+                                icon: Icon(
+                                  audioPlayerService.isLoading 
+                                      ? Icons.hourglass_empty
+                                      : audioPlayerService.isPlaying 
+                                          ? Icons.pause 
+                                          : Icons.play_arrow,
+                                ),
+                                color: Colors.black,
+                                iconSize: 32,
+                              ),
+                            ),
+                            
+                            // Next button
+                            IconButton(
+                              onPressed: audioPlayerService.currentPlaylist.isNotEmpty
+                                  ? () => audioPlayerService.nextTrack()
+                                  : null,
+                              icon: const Icon(Icons.skip_next),
+                              color: Colors.white,
+                              iconSize: 32,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Playlist selection buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => audioPlayerService.loadPlaylist('meditation'),
+                            icon: const Icon(Icons.self_improvement),
+                            label: const Text('Meditation'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: audioPlayerService.currentCategory == 'meditation'
+                                  ? Colors.blue.shade700
+                                  : const Color(0xFF2A2A2A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => audioPlayerService.loadPlaylist('upbeat'),
+                            icon: const Icon(Icons.flash_on),
+                            label: const Text('Upbeat'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: audioPlayerService.currentCategory == 'upbeat'
+                                  ? Colors.orange.shade700
+                                  : const Color(0xFF2A2A2A),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Track list
+                    ListenableBuilder(
+                      listenable: audioPlayerService,
+                      builder: (context, child) {
+                        if (audioPlayerService.currentPlaylist.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        
+                        return Container(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: audioPlayerService.currentPlaylist.length,
+                            itemBuilder: (context, index) {
+                              final track = audioPlayerService.currentPlaylist[index];
+                              final isCurrentTrack = audioPlayerService.currentTrack?.url == track.url;
+                              
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 4),
+                                decoration: BoxDecoration(
+                                  color: isCurrentTrack 
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(
+                                    isCurrentTrack && audioPlayerService.isPlaying
+                                        ? Icons.volume_up
+                                        : Icons.music_note,
+                                    color: isCurrentTrack ? Colors.white : Colors.white54,
+                                    size: 16,
+                                  ),
+                                  title: Text(
+                                    track.title,
+                                    style: TextStyle(
+                                      color: isCurrentTrack ? Colors.white : Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    track.artist ?? 'Unknown Artist',
+                                    style: TextStyle(
+                                      color: isCurrentTrack ? Colors.white60 : Colors.white54,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  onTap: () => audioPlayerService.playTrack(track),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 800.ms, delay: 300.ms)
+        .slideX(begin: -0.2, end: 0);
   }
 
   Widget _buildBluetoothSection() {
@@ -171,6 +493,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
               ),
               const Divider(color: Colors.white12, height: 1),
+              
+              // Permission status indicator
+              if (viewModel.bluetoothService.devicesList.isEmpty)
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Bluetooth permissions needed to detect connected devices. Grant permissions in Settings.',
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -243,23 +593,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isConnected =
         viewModel.bluetoothService.connectedDevice?.id == device.id;
     final isConnecting = viewModel.bluetoothService.isConnecting;
+    final isSystemDevice = device.id.startsWith('system_');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isConnected
             ? Colors.green.withOpacity(0.2)
-            : const Color(0xFF2A2A2A),
+            : isSystemDevice 
+                ? Colors.blue.withOpacity(0.1)
+                : const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isConnected ? Colors.green : Colors.white12,
+          color: isConnected 
+              ? Colors.green 
+              : isSystemDevice 
+                  ? Colors.blue.withOpacity(0.5)
+                  : Colors.white12,
           width: 1,
         ),
       ),
       child: ListTile(
         leading: Icon(
           Icons.headphones,
-          color: isConnected ? Colors.green : Colors.white60,
+          color: isConnected 
+              ? Colors.green 
+              : isSystemDevice 
+                  ? Colors.blue 
+                  : Colors.white60,
         ),
         title: Text(
           device.name.isNotEmpty ? device.name : 'Unknown Device',
@@ -269,23 +630,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             fontWeight: isConnected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
-        subtitle: Text(
-          device.address,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              device.address,
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+            if (isSystemDevice)
+              Text(
+                'System connected (grant permissions for full control)',
+                style: TextStyle(color: Colors.blue, fontSize: 10),
+              ),
+          ],
         ),
         trailing: isConnected
             ? const Icon(Icons.check_circle, color: Colors.green)
-            : isConnecting
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.bluetooth, color: Colors.white54),
-        onTap: isConnected || isConnecting
+            : isSystemDevice
+                ? const Icon(Icons.smartphone, color: Colors.blue)
+                : isConnecting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.bluetooth, color: Colors.white54),
+        onTap: isConnected || isConnecting || isSystemDevice
             ? null
             : () => viewModel.bluetoothService.connectToDevice(device),
       ),
@@ -435,6 +808,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _launchSpotifyPlaylist() async {
+    final Uri spotifyUrl = Uri.parse('https://open.spotify.com/user/ncw32pmxfr4bl8ng4dmxt96tb');
+    if (!await launchUrl(spotifyUrl, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch Spotify playlist: $spotifyUrl');
+    }
+  }
+
   Widget _buildSettingItem({
     required IconData icon,
     required String title,
@@ -467,6 +847,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes);
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   void _showAboutDialog(BuildContext context) {
@@ -541,6 +928,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEQInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'EQ Presets Guide',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildEQPresetInfo('🎧 Bass Up', 'Emphasizes deep bass while cutting highs. Perfect for bass lovers and electronic beats.'),
+              _buildEQPresetInfo('🎧 Hi-Fi', 'Clear and detailed response with an open high-frequency range. Pure high-definition listening.'),
+              _buildEQPresetInfo('🎧 Deep EQ', 'Warm and deep profile. Strong low-end, softened highs for a smooth experience.'),
+              _buildEQPresetInfo('🎧 Vibe+', 'Balanced and energetic. Slight boost to bass and treble for vibrant sound.'),
+              _buildEQPresetInfo('🎧 Stage', 'Designed for live feel. Accentuates mids and highs for instruments and vocals.'),
+              _buildEQPresetInfo('🎧 Warmth', 'Soft and cozy tone. Emphasizes lows and mids for a vintage warmth.'),
+              _buildEQPresetInfo('🎧 Clarity', 'Crisp and clean. High-frequency boost ensures maximum detail and sharpness.'),
+              _buildEQPresetInfo('🎧 Retro', 'Inspired by analog curves. Smooth and nostalgic with slight mid-cut.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              backgroundColor: const Color(0xFF2A2A2A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Got it!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEQPresetInfo(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              height: 1.3,
             ),
           ),
         ],

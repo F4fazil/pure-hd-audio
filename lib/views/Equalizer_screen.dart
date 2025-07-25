@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import '../view_models/equalizer_view_model.dart';
 import '../core/routes.dart';
@@ -18,6 +19,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   void initState() {
     super.initState();
     viewModel = EqualizerViewModel();
+    viewModel.initialize(); // Load JSON presets
   }
 
   @override
@@ -39,19 +41,22 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.15),
-                  Text(
-                        'PURE HD \n  AUDIO',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 33,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 800.ms)
-                      .slideY(begin: -0.3, end: 0),
+                  //SizedBox(width: MediaQuery.of(context).size.width * 0.15),
+                  Center(
+                    child:
+                        SvgPicture.asset(
+                              'assets/images/header.svg',
+                              width: 300,
+                              height: 100,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 800.ms)
+                            .slideY(begin: -0.2, end: 0),
+                  ),
                   IconButton(
                         onPressed: () {
                           context.push(AppRoutes.settings);
@@ -85,7 +90,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: List.generate(5, (index) {
+                                children: List.generate(8, (index) {
                                   return Expanded(
                                     child: Column(
                                       children: [
@@ -119,7 +124,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                                     Colors.white24,
                                                 thumbColor: Colors.white,
                                                 overlayColor: Colors.white
-                                                    .withOpacity(0.1),
+                                                    .withValues(alpha: 0.1),
                                               ),
                                               child: Slider(
                                                 value:
@@ -192,7 +197,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Preset buttons grid
+                          // Preset buttons grid (8 presets in 2 rows of 4)
                           GridView.count(
                             shrinkWrap: true,
                             crossAxisCount: 4,
@@ -200,12 +205,13 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                             crossAxisSpacing: 8,
                             childAspectRatio: 2.2,
 
-                            children: EQPreset.values.map((preset) {
+                            children: List.generate(viewModel.presets.length, (index) {
+                              final preset = viewModel.presets[index];
                               final isSelected =
-                                  viewModel.currentPreset == preset;
+                                  viewModel.currentPresetIndex == index;
                               return ElevatedButton(
                                 onPressed: viewModel.isEQOn
-                                    ? () => viewModel.applyPreset(preset)
+                                    ? () => viewModel.applyPreset(index)
                                     : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: isSelected
@@ -230,7 +236,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                   elevation: isSelected ? 4 : 1,
                                 ),
                                 child: Text(
-                                  viewModel.getPresetName(preset),
+                                  preset.name,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: isSelected
@@ -323,6 +329,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       .slideY(begin: 0.3, end: 0);
                 },
               ),
+
             ],
           ),
         ),

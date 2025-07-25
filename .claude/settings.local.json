@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter:*)",
+      "Bash(pod install:*)",
+      "WebFetch(domain:pub.dev)"
     ],
     "deny": []
   }
