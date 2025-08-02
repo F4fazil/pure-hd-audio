@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/audio_track.dart';
 import '../data/playlist_data.dart';
+import 'global_eq_service.dart';
 
 class AudioPlayerService extends ChangeNotifier {
   static AudioPlayerService? _instance;
@@ -23,8 +24,7 @@ class AudioPlayerService extends ChangeNotifier {
     return instance;
   }
   late final AudioPlayer _audioPlayer;
-  bool _equalizerEnabled = true;
-  int? _audioSessionId;
+  final GlobalEQService _globalEQService = GlobalEQService.instance;
 
   // Playback state
   bool _isPlaying = false;
@@ -122,8 +122,8 @@ class AudioPlayerService extends ChangeNotifier {
       await _audioPlayer.setLoopMode(LoopMode.off);
       await _audioPlayer.setVolume(0.7);
       
-      // Initialize equalizer after audio player setup
-      await _initializeEqualizer();
+      // Initialize global equalizer
+      await _initializeGlobalEqualizer();
       
       // Set audio session category for playback
       debugPrint('🎵 Audio session configured for optimal streaming');
@@ -132,20 +132,15 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
-  Future<void> _initializeEqualizer() async {
+  Future<void> _initializeGlobalEqualizer() async {
     try {
-      // Set a default audio session ID for Android equalizer
-      // 0 is typically the system default session
-      _audioSessionId = 0;
-      _equalizerEnabled = true;
-      debugPrint('✅ Equalizer service ready with session ID: $_audioSessionId');
+      // Initialize the global EQ service on app start
+      await _globalEQService.initializeOnAppStart();
+      debugPrint('✅ Global Equalizer service initialized');
     } catch (e) {
-      debugPrint('❌ Error initializing equalizer: $e');
-      _equalizerEnabled = false;
+      debugPrint('❌ Error initializing global equalizer: $e');
     }
   }
-  
-  int? get audioSessionId => _audioSessionId;
 
   // Load playlist category with optimization
   Future<void> loadPlaylist(String category) async {
@@ -294,80 +289,45 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
-  // Apply EQ settings using enhanced audio processing
+  // Apply EQ settings using global system-wide equalizer
   Future<void> applyEQSettings(List<double> bandValues) async {
     try {
-      debugPrint('🎛️ Applying EQ settings: $bandValues');
+      debugPrint('🎛️ Applying Global EQ settings: $bandValues');
       
-      // Apply enhanced EQ processing
-      await _applyEnhancedEQ(bandValues);
+      // Apply to the global system-wide equalizer
+      final success = await _globalEQService.applyEQSettings(bandValues);
       
-    } catch (e) {
-      debugPrint('❌ Error applying EQ settings: $e');
-    }
-  }
-
-  // Enhanced EQ processing with frequency-based adjustments
-  Future<void> _applyEnhancedEQ(List<double> bandValues) async {
-    try {
-      // Calculate bass, mid, and treble adjustments from 8-band EQ
-      // Bands: 60Hz, 170Hz, 310Hz, 600Hz, 1kHz, 3kHz, 6kHz, 12kHz
-      double bassLevel = (bandValues[0] + bandValues[1]) / 2;  // 60Hz + 170Hz
-      double midLevel = (bandValues[2] + bandValues[3] + bandValues[4]) / 3;  // 310Hz + 600Hz + 1kHz
-      double trebleLevel = (bandValues[5] + bandValues[6] + bandValues[7]) / 3;  // 3kHz + 6kHz + 12kHz
-      
-      // Calculate overall volume based on EQ curve
-      double totalBoost = bandValues.reduce((a, b) => a + b);
-      double avgBoost = totalBoost / bandValues.length;
-      
-      // Apply volume adjustment with EQ compensation
-      double baseVolume = 0.8;
-      double volumeMultiplier = 1.0 + (avgBoost / 20.0);
-      double adjustedVolume = (baseVolume * volumeMultiplier).clamp(0.2, 1.0);
-      
-      await _audioPlayer.setVolume(adjustedVolume);
-      
-      // Apply speed/pitch adjustments for frequency simulation (subtle effect)
-      if (bassLevel > 3.0) {
-        // Slight speed reduction for bass emphasis
-        await _audioPlayer.setSpeed(0.98);
-      } else if (trebleLevel > 3.0) {
-        // Slight speed increase for treble emphasis  
-        await _audioPlayer.setSpeed(1.02);
+      if (success) {
+        debugPrint('✅ Global EQ settings applied successfully');
+        
+        // Optional: Still apply some local volume adjustments for compatibility
+        await _applyLocalVolumeAdjustment(bandValues);
       } else {
-        await _audioPlayer.setSpeed(1.0);
+        debugPrint('⚠️ Failed to apply global EQ, falling back to local simulation');
+        await _applyLocalVolumeAdjustment(bandValues);
       }
       
-      debugPrint('🎛️ Enhanced EQ applied:');
-      debugPrint('   Bass: ${bassLevel.toStringAsFixed(1)}dB');
-      debugPrint('   Mid: ${midLevel.toStringAsFixed(1)}dB'); 
-      debugPrint('   Treble: ${trebleLevel.toStringAsFixed(1)}dB');
-      debugPrint('   Volume: ${adjustedVolume.toStringAsFixed(2)}');
-      
     } catch (e) {
-      debugPrint('❌ Enhanced EQ processing failed: $e');
-      // Fallback to basic volume adjustment
-      await _applySoftwareEQ(bandValues);
+      debugPrint('❌ Error applying global EQ settings: $e');
+      // Fallback to local adjustments
+      await _applyLocalVolumeAdjustment(bandValues);
     }
   }
 
-  // Software-based EQ simulation using audio effects
-  Future<void> _applySoftwareEQ(List<double> bandValues) async {
+  // Local volume adjustments as fallback
+  Future<void> _applyLocalVolumeAdjustment(List<double> bandValues) async {
     try {
       // Calculate overall volume adjustment based on EQ settings
       double avgBoost = bandValues.reduce((a, b) => a + b) / bandValues.length;
-      double volumeMultiplier =
-          1.0 + (avgBoost / 24.0); // Scale to reasonable range
+      double volumeMultiplier = 1.0 + (avgBoost / 24.0);
 
-      // Apply volume adjustment (this is a simple approximation)
-      double adjustedVolume = (0.7 * volumeMultiplier).clamp(0.1, 1.0);
+      // Apply volume adjustment (gentle adjustment to complement global EQ)
+      double adjustedVolume = (0.7 * volumeMultiplier).clamp(0.3, 1.0);
       await _audioPlayer.setVolume(adjustedVolume);
 
-      debugPrint(
-        '🎵 Software EQ simulation applied - Volume: ${adjustedVolume.toStringAsFixed(2)}',
-      );
+      debugPrint('🎵 Local volume adjustment applied: ${adjustedVolume.toStringAsFixed(2)}');
     } catch (e) {
-      debugPrint('❌ Software EQ simulation failed: $e');
+      debugPrint('❌ Local volume adjustment failed: $e');
     }
   }
 

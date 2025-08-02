@@ -27,6 +27,7 @@ dependencies:
   flutter_blue_plus: ^1.35.5
   just_audio: ^0.9.40
   provider: ^6.1.5
+  webview_flutter: ^4.8.0
 
 flutter_launcher_icons:
   android: true

@@ -19,7 +19,24 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   void initState() {
     super.initState();
     viewModel = EqualizerViewModel();
-    viewModel.initialize(); // Load JSON presets
+    _initializeViewModel();
+  }
+
+  Future<void> _initializeViewModel() async {
+    try {
+      await viewModel.initialize(); // Load JSON presets
+    } catch (e) {
+      debugPrint('Error initializing equalizer: $e');
+      // Show error to user but don't crash
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load equalizer settings: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -39,37 +56,63 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
             children: [
               // Top bar with app name and settings
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  //SizedBox(width: MediaQuery.of(context).size.width * 0.15),
-                  Center(
-                    child:
-                        SvgPicture.asset(
-                              'assets/images/header.svg',
-                              width: 300,
-                              height: 100,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(duration: 800.ms)
-                            .slideY(begin: -0.2, end: 0),
-                  ),
-                  IconButton(
-                        onPressed: () {
-                          context.push(AppRoutes.settings);
-                        },
-                        icon: const Icon(
-                          Icons.settings,
-                          color: Colors.white,
-                          size: 28,
+                  // Flexible space for header
+                  Expanded(
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/images/header.svg',
+                        width: MediaQuery.of(context).size.width * 0.5, // Reduced from 0.63 to 0.5
+                        height: 80, // Reduced height from 100 to 80
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
                         ),
                       )
                       .animate()
-                      .fadeIn(duration: 800.ms, delay: 200.ms)
-                      .scale(begin: const Offset(0.8, 0.8)),
+                      .fadeIn(duration: 800.ms)
+                      .slideY(begin: -0.2, end: 0),
+                    ),
+                  ),
+                  // Settings and Voice buttons
+                  Row(
+                    children: [
+                      // Voice button
+                      SizedBox(
+                        width: 48,
+                        child: IconButton(
+                          onPressed: () {
+                            context.push(AppRoutes.voice);
+                          },
+                          icon: const Icon(
+                            Icons.mic,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 800.ms, delay: 200.ms)
+                        .scale(begin: const Offset(0.8, 0.8)),
+                      ),
+                      // Settings button
+                      SizedBox(
+                        width: 48,
+                        child: IconButton(
+                          onPressed: () {
+                            context.push(AppRoutes.settings);
+                          },
+                          icon: const Icon(
+                            Icons.settings,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 800.ms, delay: 250.ms)
+                        .scale(begin: const Offset(0.8, 0.8)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
 
@@ -205,7 +248,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                             crossAxisSpacing: 8,
                             childAspectRatio: 2.2,
 
-                            children: List.generate(viewModel.presets.length, (index) {
+                            children: List.generate(viewModel.presets.length, (
+                              index,
+                            ) {
                               final preset = viewModel.presets[index];
                               final isSelected =
                                   viewModel.currentPresetIndex == index;
@@ -329,7 +374,6 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       .slideY(begin: 0.3, end: 0);
                 },
               ),
-
             ],
           ),
         ),

@@ -71,11 +71,11 @@ class _WelcomeScreenState extends State<HomeScreen> {
                             child: ModelViewer(
                               backgroundColor: Colors.transparent,
                               src:
-                                  'assets/models/headphones.glb', // Replace with your GLB file name
+                                  'assets/models/headphones1.glb', // Replace with your GLB file name
                               alt: 'A 3D model of headphones',
                               ar: true,
                               autoRotate: true,
-                              iosSrc: 'assets/models/headphones.glb',
+                              iosSrc: 'assets/models/headphones1.glb',
                               disableZoom: false,
                               cameraControls: true,
                               touchAction: TouchAction.panY,

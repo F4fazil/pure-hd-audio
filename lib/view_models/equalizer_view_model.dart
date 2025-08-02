@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/audio_player_service.dart';
+import '../services/global_eq_service.dart';
 import '../models/eq_preset.dart';
 
 class EqualizerViewModel extends ChangeNotifier {
@@ -14,8 +15,9 @@ class EqualizerViewModel extends ChangeNotifier {
   List<EQPresetData> _presets = [];
   EQConfiguration? _eqConfig;
 
-  // Audio player service (singleton)
+  // Services (singletons)
   final AudioPlayerService _audioPlayerService = AudioPlayerService.instance;
+  final GlobalEQService _globalEQService = GlobalEQService.instance;
 
   // Getters
   bool get isEQOn => _isEQOn;
@@ -27,15 +29,41 @@ class EqualizerViewModel extends ChangeNotifier {
   AudioPlayerService get audioPlayerService => _audioPlayerService;
 
   // Toggle EQ on/off
-  void toggleEQ() {
+  void toggleEQ() async {
     _isEQOn = !_isEQOn;
-    _applyEQToPlayer();
+    
+    // Apply to global EQ service
+    await _globalEQService.setEQEnabled(_isEQOn);
+    
+    // Also apply current settings to player
+    await _applyEQToPlayer();
+    
     notifyListeners();
   }
 
   // Initialize with JSON data
   Future<void> initialize() async {
     await _loadEQConfiguration();
+    
+    // Initialize global EQ service
+    await _initializeGlobalEQ();
+  }
+  
+  // Initialize global EQ service
+  Future<void> _initializeGlobalEQ() async {
+    try {
+      // Ensure global EQ service is running
+      if (!_globalEQService.isServiceRunning) {
+        await _globalEQService.startGlobalEQ();
+      }
+      
+      // Apply current EQ settings to global service
+      await _applyEQToPlayer();
+      
+      debugPrint('✅ Global EQ initialized in EqualizerViewModel');
+    } catch (e) {
+      debugPrint('❌ Error initializing global EQ: $e');
+    }
   }
 
   // Load EQ configuration from JSON
@@ -55,11 +83,14 @@ class EqualizerViewModel extends ChangeNotifier {
         _bandValues = List.from(_presets[0].values);
       }
       
+      debugPrint('✅ EQ configuration loaded successfully: ${_presets.length} presets');
       notifyListeners();
     } catch (e) {
-      debugPrint('Error loading EQ configuration: $e');
+      debugPrint('❌ Error loading EQ configuration: $e');
       // Fallback to default 8-band configuration
       _setDefaultConfiguration();
+      // Re-throw the error so the UI can handle it
+      rethrow;
     }
   }
 
@@ -116,17 +147,27 @@ class EqualizerViewModel extends ChangeNotifier {
     return 'Unknown';
   }
 
-  // Apply EQ settings to audio player
+  // Apply EQ settings to global EQ and audio player
   Future<void> _applyEQToPlayer() async {
     try {
+      List<double> settingsToApply;
+      
       if (_isEQOn) {
-        await _audioPlayerService.applyEQSettings(_bandValues);
+        settingsToApply = _bandValues;
       } else {
         // Apply flat EQ when disabled
-        await _audioPlayerService.applyEQSettings(List.filled(_bandValues.length, 0.0));
+        settingsToApply = List.filled(_bandValues.length, 0.0);
       }
+      
+      // Apply to global system-wide EQ
+      await _globalEQService.applyEQSettings(settingsToApply);
+      
+      // Also apply to audio player (for compatibility and local adjustments)
+      await _audioPlayerService.applyEQSettings(settingsToApply);
+      
+      debugPrint('🎛️ EQ settings applied to both global and local services');
     } catch (e) {
-      debugPrint('Error applying EQ to player: $e');
+      debugPrint('❌ Error applying EQ settings: $e');
     }
   }
 

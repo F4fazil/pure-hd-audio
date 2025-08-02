@@ -16,15 +16,19 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late SettingsViewModel viewModel;
   late AudioPlayerService audioPlayerService;
+  final bool _bluetoothEnabled = false;
 
   @override
   void initState() {
     super.initState();
     viewModel = SettingsViewModel();
     audioPlayerService = AudioPlayerService.instance;
-    // Refresh connected devices when settings screen loads
+    // The BluetoothService will automatically load paired devices on initialization
+    // But we can also refresh them to ensure they're up to date
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.refreshConnectedDevices();
+      if (mounted) {
+        viewModel.refreshConnectedDevices();
+      }
     });
   }
 
@@ -135,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             .animate()
                             .fadeIn(duration: 800.ms, delay: 700.ms)
                             .slideX(begin: -0.2, end: 0),
-                        
+
                         // Equalizer
                         _buildSettingItem(
                               icon: Icons.equalizer,
@@ -199,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(color: Colors.white12, height: 1),
-              
+
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -228,7 +232,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  audioPlayerService.currentTrack?.artist ?? 'Unknown Artist',
+                                  audioPlayerService.currentTrack?.artist ??
+                                      'Unknown Artist',
                                   style: const TextStyle(
                                     color: Colors.white60,
                                     fontSize: 14,
@@ -240,8 +245,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 SliderTheme(
                                   data: SliderTheme.of(context).copyWith(
                                     trackHeight: 2,
-                                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                                    thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 6,
+                                    ),
+                                    overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 12,
+                                    ),
                                     activeTrackColor: Colors.white,
                                     inactiveTrackColor: Colors.white24,
                                     thumbColor: Colors.white,
@@ -250,22 +259,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     value: audioPlayerService.progress,
                                     onChanged: (value) {
                                       final position = Duration(
-                                        milliseconds: (value * audioPlayerService.duration.inMilliseconds).round(),
+                                        milliseconds:
+                                            (value *
+                                                    audioPlayerService
+                                                        .duration
+                                                        .inMilliseconds)
+                                                .round(),
                                       );
                                       audioPlayerService.seek(position);
                                     },
                                   ),
                                 ),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      _formatDuration(audioPlayerService.position),
-                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                      _formatDuration(
+                                        audioPlayerService.position,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                     Text(
-                                      _formatDuration(audioPlayerService.duration),
-                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                      _formatDuration(
+                                        audioPlayerService.duration,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -289,9 +314,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Control buttons
                     ListenableBuilder(
                       listenable: audioPlayerService,
@@ -301,14 +326,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             // Previous button
                             IconButton(
-                              onPressed: audioPlayerService.currentPlaylist.isNotEmpty
+                              onPressed:
+                                  audioPlayerService.currentPlaylist.isNotEmpty
                                   ? () => audioPlayerService.previousTrack()
                                   : null,
                               icon: const Icon(Icons.skip_previous),
                               color: Colors.white,
                               iconSize: 32,
                             ),
-                            
+
                             // Play/pause button
                             Container(
                               decoration: BoxDecoration(
@@ -316,24 +342,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                onPressed: audioPlayerService.currentTrack != null
+                                onPressed:
+                                    audioPlayerService.currentTrack != null
                                     ? () => audioPlayerService.togglePlayPause()
                                     : null,
                                 icon: Icon(
-                                  audioPlayerService.isLoading 
+                                  audioPlayerService.isLoading
                                       ? Icons.hourglass_empty
-                                      : audioPlayerService.isPlaying 
-                                          ? Icons.pause 
-                                          : Icons.play_arrow,
+                                      : audioPlayerService.isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
                                 ),
                                 color: Colors.black,
                                 iconSize: 32,
                               ),
                             ),
-                            
+
                             // Next button
                             IconButton(
-                              onPressed: audioPlayerService.currentPlaylist.isNotEmpty
+                              onPressed:
+                                  audioPlayerService.currentPlaylist.isNotEmpty
                                   ? () => audioPlayerService.nextTrack()
                                   : null,
                               icon: const Icon(Icons.skip_next),
@@ -344,19 +372,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Playlist selection buttons
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => audioPlayerService.loadPlaylist('meditation'),
+                            onPressed: () =>
+                                audioPlayerService.loadPlaylist('meditation'),
                             icon: const Icon(Icons.self_improvement),
                             label: const Text('Meditation'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: audioPlayerService.currentCategory == 'meditation'
+                              backgroundColor:
+                                  audioPlayerService.currentCategory ==
+                                      'meditation'
                                   ? Colors.blue.shade700
                                   : const Color(0xFF2A2A2A),
                               foregroundColor: Colors.white,
@@ -369,11 +400,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => audioPlayerService.loadPlaylist('upbeat'),
+                            onPressed: () =>
+                                audioPlayerService.loadPlaylist('upbeat'),
                             icon: const Icon(Icons.flash_on),
                             label: const Text('Upbeat'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: audioPlayerService.currentCategory == 'upbeat'
+                              backgroundColor:
+                                  audioPlayerService.currentCategory == 'upbeat'
                                   ? Colors.orange.shade700
                                   : const Color(0xFF2A2A2A),
                               foregroundColor: Colors.white,
@@ -385,9 +418,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Track list
                     ListenableBuilder(
                       listenable: audioPlayerService,
@@ -395,20 +428,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (audioPlayerService.currentPlaylist.isEmpty) {
                           return const SizedBox.shrink();
                         }
-                        
+
                         return Container(
                           constraints: const BoxConstraints(maxHeight: 200),
                           child: ListView.builder(
                             shrinkWrap: true,
-                            itemCount: audioPlayerService.currentPlaylist.length,
+                            itemCount:
+                                audioPlayerService.currentPlaylist.length,
                             itemBuilder: (context, index) {
-                              final track = audioPlayerService.currentPlaylist[index];
-                              final isCurrentTrack = audioPlayerService.currentTrack?.url == track.url;
-                              
+                              final track =
+                                  audioPlayerService.currentPlaylist[index];
+                              final isCurrentTrack =
+                                  audioPlayerService.currentTrack?.url ==
+                                  track.url;
+
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 4),
                                 decoration: BoxDecoration(
-                                  color: isCurrentTrack 
+                                  color: isCurrentTrack
                                       ? Colors.white.withValues(alpha: 0.1)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(4),
@@ -416,28 +453,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: ListTile(
                                   dense: true,
                                   leading: Icon(
-                                    isCurrentTrack && audioPlayerService.isPlaying
+                                    isCurrentTrack &&
+                                            audioPlayerService.isPlaying
                                         ? Icons.volume_up
                                         : Icons.music_note,
-                                    color: isCurrentTrack ? Colors.white : Colors.white54,
+                                    color: isCurrentTrack
+                                        ? Colors.white
+                                        : Colors.white54,
                                     size: 16,
                                   ),
                                   title: Text(
                                     track.title,
                                     style: TextStyle(
-                                      color: isCurrentTrack ? Colors.white : Colors.white70,
+                                      color: isCurrentTrack
+                                          ? Colors.white
+                                          : Colors.white70,
                                       fontSize: 12,
-                                      fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.normal,
+                                      fontWeight: isCurrentTrack
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
                                     ),
                                   ),
                                   subtitle: Text(
                                     track.artist ?? 'Unknown Artist',
                                     style: TextStyle(
-                                      color: isCurrentTrack ? Colors.white60 : Colors.white54,
+                                      color: isCurrentTrack
+                                          ? Colors.white60
+                                          : Colors.white54,
                                       fontSize: 10,
                                     ),
                                   ),
-                                  onTap: () => audioPlayerService.playTrack(track),
+                                  onTap: () =>
+                                      audioPlayerService.playTrack(track),
                                 ),
                               );
                             },
@@ -457,7 +504,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildBluetoothSection() {
-    return Container(
+    return AnimatedBuilder(
+      animation: viewModel.bluetoothService,
+      builder: (context, _) {
+        final pairedDevices = viewModel.bluetoothService.devicesList
+            .where((device) => device.isPaired)
+            .toList();
+
+        final availableDevices = viewModel.bluetoothService.devicesList
+            .where((device) => !device.isPaired)
+            .toList();
+
+        // Debug info
+        debugPrint(
+          '🔍 UI Debug - Total devices: ${viewModel.bluetoothService.devicesList.length}',
+        );
+        debugPrint('🔍 UI Debug - Paired devices: ${pairedDevices.length}');
+        debugPrint(
+          '🔍 UI Debug - Available devices: ${availableDevices.length}',
+        );
+        for (var device in viewModel.bluetoothService.devicesList) {
+          debugPrint('🔍 Device: ${device.name} (paired: ${device.isPaired})');
+        }
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A1A),
             borderRadius: BorderRadius.circular(12),
@@ -466,263 +537,223 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ListTile(
-                leading: const Icon(
-                  Icons.bluetooth,
-                  color: Colors.white,
-                  size: 28,
-                ),
-                title: const Text(
-                  'Bluetooth Devices',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  viewModel.bluetoothService.connectedDevice?.name ??
-                      'No device connected',
-                  style: const TextStyle(color: Colors.white60, fontSize: 14),
-                ),
-                trailing: viewModel.bluetoothService.isConnected
-                    ? const Icon(Icons.check_circle, color: Colors.green)
-                    : const Icon(
-                        Icons.bluetooth_searching,
-                        color: Colors.white54,
-                      ),
-              ),
-              const Divider(color: Colors.white12, height: 1),
-              
-              // Permission status indicator - only show when we have demo devices OR no devices and no permissions
-              FutureBuilder<bool>(
-                future: viewModel.bluetoothService.hasBluetoothPermissions(),
-                builder: (context, snapshot) {
-                  final hasPermissions = snapshot.data ?? false;
-                  final hasOnlyDemoDevices = viewModel.bluetoothService.devicesList.any((d) => d.name.contains('Demo'));
-                  final shouldShowWarning = hasOnlyDemoDevices || (!hasPermissions && viewModel.bluetoothService.devicesList.isEmpty);
-                  
-                  if (!shouldShowWarning) return const SizedBox.shrink();
-                  
-                  return
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Bluetooth permissions needed to detect your connected devices (like AirPods)',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                await viewModel.bluetoothService.openSettings();
-                                // Refresh devices after user returns from settings
-                                Future.delayed(const Duration(seconds: 1), () {
-                                  viewModel.refreshConnectedDevices();
-                                });
-                              },
-                              icon: const Icon(Icons.settings, size: 16),
-                              label: const Text('Open Settings'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange.shade700,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: () => viewModel.refreshConnectedDevices(),
-                            icon: const Icon(Icons.refresh, size: 16),
-                            label: const Text('Retry'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2A2A2A),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-                },
-              ),
-              
+              // Header with scan button
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: viewModel.bluetoothService.isDiscovering
-                                ? null
-                                : () => viewModel.bluetoothService
-                                      .startDiscovery(),
-                            icon: viewModel.bluetoothService.isDiscovering
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.search),
-                            label: Text(
-                              viewModel.bluetoothService.isDiscovering
-                                  ? 'Searching...'
-                                  : 'Scan Devices',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2A2A2A),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+                        Icon(Icons.bluetooth, color: Colors.blue, size: 28),
+                        SizedBox(width: 12),
+                        Text(
+                          'Bluetooth Devices',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        if (viewModel.bluetoothService.isConnected)
-                          ElevatedButton(
-                            onPressed: () =>
-                                viewModel.bluetoothService.disconnect(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text('Disconnect'),
-                          ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Show devices if we have any
-                    if (viewModel.bluetoothService.devicesList.isNotEmpty)
-                      ...viewModel.bluetoothService.devicesList.map(
-                        (device) => _buildBluetoothDeviceItem(device),
-                      )
-                    else
-                      // Show empty state when permissions granted but no devices
-                      FutureBuilder<bool>(
-                        future: viewModel.bluetoothService.hasBluetoothPermissions(),
-                        builder: (context, snapshot) {
-                          final hasPermissions = snapshot.data ?? false;
-                          if (!hasPermissions) return const SizedBox.shrink();
-                          
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A2A2A),
-                              borderRadius: BorderRadius.circular(8),
+                    Flexible(
+                      child: ElevatedButton(
+                        onPressed: viewModel.bluetoothService.isDiscovering
+                            ? null
+                            : () => viewModel.bluetoothService.startDiscovery(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              viewModel.bluetoothService.isDiscovering
+                                  ? Icons.hourglass_empty
+                                  : Icons.search,
+                              size: 16,
                             ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.bluetooth_disabled,
-                                  color: Colors.white54,
-                                  size: 32,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'No Bluetooth devices found',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Make sure your AirPods or headphones are connected and try scanning again.',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 12,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                viewModel.bluetoothService.isDiscovering
+                                    ? 'Scanning...'
+                                    : 'Scan',
+                                style: const TextStyle(fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
+                    ),
                   ],
                 ),
               ),
+              const Divider(color: Colors.white12, height: 1),
+
+              // Scanning indicator
+              if (viewModel.bluetoothService.isDiscovering)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Scanning...', style: TextStyle(color: Colors.blue)),
+                    ],
+                  ),
+                ),
+
+              // PAIRED DEVICES SECTION
+              if (pairedDevices.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    'PAIRED DEVICES',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ...pairedDevices.map(
+                  (device) => _buildBluetoothDeviceItem(device),
+                ),
+                const Divider(color: Colors.white12, height: 24),
+              ],
+
+              // AVAILABLE DEVICES SECTION
+              if (availableDevices.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Text(
+                    'AVAILABLE DEVICES',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ...availableDevices.map(
+                  (device) => _buildBluetoothDeviceItem(device),
+                ),
+              ],
+
+              // No devices found
+              if (viewModel.bluetoothService.devicesList.isEmpty &&
+                  !viewModel.bluetoothService.isDiscovering)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.bluetooth_searching,
+                          color: Colors.white54,
+                          size: 32,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No paired devices found.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Tap Scan to discover new devices, or pair devices in your system Bluetooth settings.',
+                          style: TextStyle(color: Colors.white54, fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
-        )
-        .animate()
-        .fadeIn(duration: 800.ms, delay: 400.ms)
-        .slideX(begin: -0.2, end: 0);
+        );
+      },
+    );
   }
 
   Widget _buildBluetoothDeviceItem(MockBluetoothDevice device) {
     final isConnected =
         viewModel.bluetoothService.connectedDevice?.id == device.id;
-    final isConnecting = viewModel.bluetoothService.isConnecting;
-    final isSystemDevice = device.id.startsWith('system_');
+    final isConnecting =
+        viewModel.bluetoothService.isConnecting &&
+        viewModel.bluetoothService.connectingDeviceId == device.id;
+    final isPaired = device.isPaired;
+
+    // Choose appropriate icon based on device characteristics
+    IconData deviceIcon;
+    if (device.name.toLowerCase().contains('airpod') ||
+        device.name.toLowerCase().contains('pod') ||
+        device.name.toLowerCase().contains('bud')) {
+      deviceIcon = Icons.headphones;
+    } else if (device.name.toLowerCase().contains('watch') ||
+        device.name.toLowerCase().contains('band')) {
+      deviceIcon = Icons.watch;
+    } else if (device.name.toLowerCase().contains('speaker') ||
+        device.name.toLowerCase().contains('sound')) {
+      deviceIcon = Icons.speaker;
+    } else if (device.name.toLowerCase().contains('car') ||
+        device.name.toLowerCase().contains('toyota')) {
+      deviceIcon = Icons.directions_car;
+    } else {
+      deviceIcon = Icons.bluetooth;
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: isConnected
             ? Colors.green.withValues(alpha: 0.2)
-            : isSystemDevice 
-                ? Colors.blue.withValues(alpha: 0.1)
-                : const Color(0xFF2A2A2A),
+            : isPaired
+            ? Colors.blue.withValues(alpha: 0.1)
+            : const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isConnected 
-              ? Colors.green 
-              : isSystemDevice 
-                  ? Colors.blue.withValues(alpha: 0.5)
-                  : Colors.white12,
+          color: isConnected
+              ? Colors.green
+              : isPaired
+              ? Colors.blue.withValues(alpha: 0.5)
+              : Colors.white12,
           width: 1,
         ),
       ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         leading: Icon(
-          Icons.headphones,
-          color: isConnected 
-              ? Colors.green 
-              : isSystemDevice 
-                  ? Colors.blue 
-                  : Colors.white60,
+          deviceIcon,
+          color: isConnected
+              ? Colors.green
+              : isPaired
+              ? Colors.blue
+              : Colors.white60,
+          size: 28,
         ),
         title: Text(
           device.name.isNotEmpty ? device.name : 'Unknown Device',
@@ -732,37 +763,182 @@ class _SettingsScreenState extends State<SettingsScreen> {
             fontWeight: isConnected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              device.address,
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
-            ),
-            if (isSystemDevice)
-              Text(
-                'System connected (grant permissions for full control)',
-                style: TextStyle(color: Colors.blue, fontSize: 10),
-              ),
-          ],
+        subtitle: Text(
+          isPaired ? 'Paired with this device' : 'Available for connection',
+          style: TextStyle(
+            color: isPaired ? Colors.blue : Colors.white54,
+            fontSize: 12,
+          ),
         ),
         trailing: isConnected
-            ? const Icon(Icons.check_circle, color: Colors.green)
-            : isSystemDevice
-                ? const Icon(Icons.smartphone, color: Colors.blue)
-                : isConnecting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await viewModel.bluetoothService.disconnect();
+                        
+                        // Wait a moment for disconnection to take effect
+                        await Future.delayed(Duration(milliseconds: 500));
+                        
+                        // Check actual connection status
+                        final statusMap = await viewModel.bluetoothService.checkConnectionStatus(device.address);
+                        final isStillConnected = statusMap?['isConnected'] ?? false;
+                        
+                        if (mounted) {
+                          if (!isStillConnected) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '✅ Successfully disconnected from ${device.name}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(16),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '⚠️ ${device.name} may still be connected. Try disconnecting from system Bluetooth settings.',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.orange,
+                                duration: const Duration(seconds: 3),
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(16),
+                              ),
+                            );
+                          }
+                        }
+                        
+                        // Refresh the device list to update connection status
+                        viewModel.refreshConnectedDevices();
+                        
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '❌ Disconnect error: ${e.toString()}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.redAccent,
+                              duration: const Duration(seconds: 3),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.all(16),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 0,
+                      ),
+                      minimumSize: const Size(70, 28),
+                    ),
+                    child: const Text(
+                      'Disconnect',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              )
+            : isConnecting
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.blue,
+                ),
+              )
+            : ElevatedButton(
+                onPressed: () async {
+                  try {
+                    final success = await viewModel.bluetoothService
+                        .connectToDevice(device);
+
+                    if (mounted) {
+                      if (success) {
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '✅ Successfully connected to ${device.name}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                            margin: const EdgeInsets.all(16),
+                          ),
+                        );
+                      } else {
+                        // Show error message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '❌ Could not connect to ${device.name}. Make sure it\'s in pairing mode and try again.',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.redAccent,
+                            duration: const Duration(seconds: 4),
+                            behavior: SnackBarBehavior.floating,
+                            margin: const EdgeInsets.all(16),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    // Show exception message
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '❌ Connection error: ${e.toString()}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.redAccent,
+                          duration: const Duration(seconds: 4),
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(16),
                         ),
-                      )
-                    : const Icon(Icons.bluetooth, color: Colors.white54),
-        onTap: isConnected || isConnecting || isSystemDevice
-            ? null
-            : () => viewModel.bluetoothService.connectToDevice(device),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isPaired
+                      ? Colors.blue
+                      : const Color(0xFF3A3A3A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
+                  minimumSize: const Size(80, 32),
+                ),
+                child: const Text('Connect'),
+              ),
+        onTap:
+            null, // Disable tap on the whole row - connection is only via button
       ),
     );
   }
@@ -854,7 +1030,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .slideX(begin: -0.2, end: 0);
   }
 
-
   Future<void> _launchWebsite() async {
     final Uri url = Uri.parse('https://silentsystem.com');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -863,7 +1038,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _launchSpotifyPlaylist() async {
-    final Uri spotifyUrl = Uri.parse('https://open.spotify.com/user/ncw32pmxfr4bl8ng4dmxt96tb');
+    final Uri spotifyUrl = Uri.parse(
+      'https://open.spotify.com/user/ncw32pmxfr4bl8ng4dmxt96tb',
+    );
     if (!await launchUrl(spotifyUrl, mode: LaunchMode.externalApplication)) {
       debugPrint('Could not launch Spotify playlist: $spotifyUrl');
     }
@@ -1008,14 +1185,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildEQPresetInfo('🎧 Bass Up', 'Emphasizes deep bass while cutting highs. Perfect for bass lovers and electronic beats.'),
-              _buildEQPresetInfo('🎧 Hi-Fi', 'Clear and detailed response with an open high-frequency range. Pure high-definition listening.'),
-              _buildEQPresetInfo('🎧 Deep EQ', 'Warm and deep profile. Strong low-end, softened highs for a smooth experience.'),
-              _buildEQPresetInfo('🎧 Vibe+', 'Balanced and energetic. Slight boost to bass and treble for vibrant sound.'),
-              _buildEQPresetInfo('🎧 Stage', 'Designed for live feel. Accentuates mids and highs for instruments and vocals.'),
-              _buildEQPresetInfo('🎧 Warmth', 'Soft and cozy tone. Emphasizes lows and mids for a vintage warmth.'),
-              _buildEQPresetInfo('🎧 Clarity', 'Crisp and clean. High-frequency boost ensures maximum detail and sharpness.'),
-              _buildEQPresetInfo('🎧 Retro', 'Inspired by analog curves. Smooth and nostalgic with slight mid-cut.'),
+              _buildEQPresetInfo(
+                '🎧 Bass Up',
+                'Emphasizes deep bass while cutting highs. Perfect for bass lovers and electronic beats.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Hi-Fi',
+                'Clear and detailed response with an open high-frequency range. Pure high-definition listening.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Deep EQ',
+                'Warm and deep profile. Strong low-end, softened highs for a smooth experience.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Vibe+',
+                'Balanced and energetic. Slight boost to bass and treble for vibrant sound.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Stage',
+                'Designed for live feel. Accentuates mids and highs for instruments and vocals.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Warmth',
+                'Soft and cozy tone. Emphasizes lows and mids for a vintage warmth.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Clarity',
+                'Crisp and clean. High-frequency boost ensures maximum detail and sharpness.',
+              ),
+              _buildEQPresetInfo(
+                '🎧 Retro',
+                'Inspired by analog curves. Smooth and nostalgic with slight mid-cut.',
+              ),
             ],
           ),
         ),

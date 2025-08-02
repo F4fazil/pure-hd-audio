@@ -2,11 +2,13 @@ import 'package:go_router/go_router.dart';
 import 'package:realaudiohd/views/Equalizer_screen.dart';
 import '../views/home_screen.dart';
 import '../views/settings_screen.dart';
+import '../views/voice_screen.dart';
 
 class AppRoutes {
   static const String welcome = '/';
   static const String home = '/home';
   static const String settings = '/settings';
+  static const String voice = '/voice';
 }
 
 final GoRouter router = GoRouter(
@@ -26,6 +28,11 @@ final GoRouter router = GoRouter(
       path: AppRoutes.settings,
       name: 'settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.voice,
+      name: 'voice',
+      builder: (context, state) => const VoiceScreen(),
     ),
   ],
 );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/bluetooth_service.dart';
+import 'package:realaudiohd/services/bluetooth_service.dart';
 
 enum Language { english }
 
@@ -41,7 +41,7 @@ class SettingsViewModel extends ChangeNotifier {
 
   // Refresh connected devices
   Future<void> refreshConnectedDevices() async {
-    await _bluetoothService.refreshWithPermissions();
+    await _bluetoothService.refreshPairedDevices();
     notifyListeners();
   }
 
