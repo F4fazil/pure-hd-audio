@@ -1,16 +1,36 @@
-# realaudiohd
+# PURE HD Audio
 
-A new Flutter project.
+A premium Flutter-based audio enhancement application featuring advanced equalizer functionality, Bluetooth connectivity, and immersive audio experiences.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Advanced Equalizer**: Professional-grade audio equalizer with multiple presets
+- **Bluetooth Connectivity**: Seamless connection to wireless audio devices
+- **Global Audio Enhancement**: System-wide audio processing
+- **Modern UI**: Clean, intuitive interface with smooth animations
+- **Background Processing**: Continuous audio enhancement even when app is minimized
 
-A few resources to get you started if this is your first Flutter project:
+## Technologies
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Flutter**: Cross-platform mobile development
+- **Dart**: Programming language
+- **Android Native Services**: Background audio processing
+- **Bluetooth Integration**: Wireless device connectivity
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Privacy
+
+We take your privacy seriously. This app:
+- Processes all audio locally on your device
+- Does not collect or store personal data
+- Does not transmit audio to external servers
+- Only accesses permissions necessary for functionality
+
+For detailed privacy information, see our [Privacy Policy](PRIVACY_POLICY.md).
+
+## Contact
+
+For support or inquiries, contact us at: qazifazil4@gmail.com
+
+---
+
+© 2025 Silent System. All rights reserved.

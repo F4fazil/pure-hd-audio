@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,17 +53,15 @@ class EqualizerViewModel extends ChangeNotifier {
   // Initialize global EQ service
   Future<void> _initializeGlobalEQ() async {
     try {
-      // Ensure global EQ service is running
-      if (!_globalEQService.isServiceRunning) {
-        await _globalEQService.startGlobalEQ();
-      }
+      // Start EQ service (will work for Android global, iOS in-app only)
+      await _globalEQService.startGlobalEQ();
       
-      // Apply current EQ settings to global service
+      // Apply current EQ settings
       await _applyEQToPlayer();
       
-      debugPrint('✅ Global EQ initialized in EqualizerViewModel');
+      debugPrint('✅ EQ service initialized');
     } catch (e) {
-      debugPrint('❌ Error initializing global EQ: $e');
+      debugPrint('❌ Error initializing EQ: $e');
     }
   }
 
@@ -159,13 +158,13 @@ class EqualizerViewModel extends ChangeNotifier {
         settingsToApply = List.filled(_bandValues.length, 0.0);
       }
       
-      // Apply to global system-wide EQ
+      // Apply to global/in-app EQ (Android: global, iOS: in-app only)
       await _globalEQService.applyEQSettings(settingsToApply);
       
-      // Also apply to audio player (for compatibility and local adjustments)
+      // Also apply to audio player service for compatibility
       await _audioPlayerService.applyEQSettings(settingsToApply);
       
-      debugPrint('🎛️ EQ settings applied to both global and local services');
+      debugPrint('🎛️ EQ settings applied');
     } catch (e) {
       debugPrint('❌ Error applying EQ settings: $e');
     }

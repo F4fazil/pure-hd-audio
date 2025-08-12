@@ -34,6 +34,8 @@
 	<string>This app uses Bluetooth to connect to audio devices and enhance your listening experience.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>This app uses Bluetooth to connect to audio devices and enhance your listening experience.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires microphone access for audio processing and equalizer functionality.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
@@ -47,6 +49,8 @@
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>

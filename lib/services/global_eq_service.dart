@@ -51,19 +51,25 @@ class GlobalEQService extends ChangeNotifier {
       debugPrint('🎛️ Starting Global EQ Service...');
       
       final result = await _channel.invokeMethod('startGlobalEQ');
-      _isServiceRunning = true;
       
-      // Wait a moment for service to initialize
-      await Future.delayed(Duration(milliseconds: 500));
+      // Update service state based on actual result from native code
+      _isServiceRunning = result == true;
       
-      // Check status and get info
-      await _checkEQStatus();
-      await _getEqualizerInfo();
+      if (_isServiceRunning) {
+        // Wait a moment for service to initialize
+        await Future.delayed(Duration(milliseconds: 500));
+        
+        // Check status and get info
+        await _checkEQStatus();
+        await _getEqualizerInfo();
+        
+        debugPrint('✅ Global EQ Service started successfully');
+      } else {
+        debugPrint('❌ Global EQ Service failed to start');
+      }
       
       notifyListeners();
-      
-      debugPrint('✅ Global EQ Service started: $result');
-      return true;
+      return _isServiceRunning;
     } catch (e) {
       debugPrint('❌ Error starting Global EQ Service: $e');
       _isServiceRunning = false;
@@ -202,6 +208,24 @@ class GlobalEQService extends ChangeNotifier {
     notifyListeners();
   }
   
+  /// Play test tone to verify EQ is working (iOS only)
+  Future<bool> playTestTone({double frequency = 1000.0, double duration = 2.0}) async {
+    try {
+      debugPrint('🎵 Playing test tone: ${frequency}Hz for ${duration}s');
+      
+      final result = await _channel.invokeMethod('playTestTone', {
+        'frequency': frequency,
+        'duration': duration,
+      });
+      
+      debugPrint('🎵 Test tone result: $result');
+      return result == true;
+    } catch (e) {
+      debugPrint('❌ Error playing test tone: $e');
+      return false;
+    }
+  }
+  
   /// Initialize the global EQ when app starts
   Future<void> initializeOnAppStart() async {
     try {
@@ -221,6 +245,7 @@ class GlobalEQService extends ChangeNotifier {
       debugPrint('❌ Error auto-starting Global EQ: $e');
     }
   }
+  
   
   @override
   void dispose() {

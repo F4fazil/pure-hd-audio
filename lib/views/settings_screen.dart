@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -97,10 +98,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Bluetooth Device Selection
-                        _buildBluetoothSection(),
-
-                        const SizedBox(height: 20),
+                        // Bluetooth Device Selection (Android only)
+                        if (!Platform.isIOS) ...[
+                          _buildBluetoothSection(),
+                          const SizedBox(height: 20),
+                        ],
 
                         // Language Selection
                         _buildLanguageSection(),

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import '../view_models/equalizer_view_model.dart';
+import '../services/global_eq_service.dart';
 import '../core/routes.dart';
 
 class EqualizerScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class EqualizerScreen extends StatefulWidget {
 
 class _EqualizerScreenState extends State<EqualizerScreen> {
   late EqualizerViewModel viewModel;
+  final GlobalEQService _globalEQService = GlobalEQService.instance;
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
     viewModel.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {

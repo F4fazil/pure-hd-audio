@@ -174,13 +174,19 @@ class GlobalEQService : Service() {
             }
             
         } catch (e: UnsupportedOperationException) {
-            Log.e(TAG, "❌ Equalizer not supported on this device: ${e.message}")
+            Log.e(TAG, "❌ Global Equalizer not supported on this device: ${e.message}")
+            Log.e(TAG, "   This device may not support system-wide audio effects.")
+            Log.e(TAG, "   The equalizer may only work with apps that support audio effects.")
         } catch (e: IllegalStateException) {
             Log.e(TAG, "❌ Equalizer in illegal state: ${e.message}")
+            Log.e(TAG, "   Another app may be using the global equalizer.")
         } catch (e: RuntimeException) {
-            Log.e(TAG, "❌ Equalizer runtime error (may not be supported): ${e.message}")
+            Log.e(TAG, "❌ Equalizer runtime error: ${e.message}")
+            Log.e(TAG, "   Global equalizer may not be supported on this device.")
+            Log.e(TAG, "   Note: Most Android devices don't support system-wide EQ for apps like Spotify.")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Failed to initialize Global Equalizer: ${e.message}")
+            Log.e(TAG, "   Device limitation: Global EQ may not affect external apps.")
             e.printStackTrace()
         }
     }

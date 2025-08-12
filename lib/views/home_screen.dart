@@ -58,45 +58,43 @@ class _WelcomeScreenState extends State<HomeScreen> {
               // Center 3D Model
               Expanded(
                 flex: 12,
-                child:
-                    Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.transparent,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: ModelViewer(
-                              backgroundColor: Colors.transparent,
-                              src:
-                                  'assets/models/headphones1.glb', // Replace with your GLB file name
-                              alt: 'A 3D model of headphones',
-                              ar: true,
-                              autoRotate: true,
-                              iosSrc: 'assets/models/headphones1.glb',
-                              disableZoom: false,
-                              cameraControls: true,
-                              touchAction: TouchAction.panY,
-                              interactionPrompt: InteractionPrompt.none,
-                              autoPlay: true,
-                              animationName: null,
-                              cameraOrbit: "0deg 75deg 105%",
-                              minCameraOrbit: "auto auto auto",
-                              maxCameraOrbit: "auto auto auto",
-                              shadowIntensity: 0,
-                              exposure: 1.0,
-                              shadowSoftness: 0,
-                              environmentImage: null,
-                              skyboxImage: null,
-                              loading: Loading.eager,
-                            ),
-                          ),
-                        )
-                        .animate()
-                        .scale(begin: const Offset(0.5, 0.5))
-                        .fadeIn(duration: 1000.ms, delay: 400.ms),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.transparent,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: ModelViewer(
+                      backgroundColor: Colors.transparent,
+                      src: 'assets/models/headphones1.glb',
+                      alt: 'A 3D model of headphones',
+                      ar: false,
+                      autoRotate: true,
+                      iosSrc: 'assets/models/headphones1.glb',
+                      disableZoom: false,
+                      cameraControls: true,
+                      touchAction: TouchAction.panY,
+                      interactionPrompt: InteractionPrompt.none,
+                      autoPlay: true,
+                      animationName: null,
+                      cameraOrbit: "0deg 75deg 105%",
+                      minCameraOrbit: "auto auto auto",
+                      maxCameraOrbit: "auto auto auto",
+                      shadowIntensity: 0,
+                      exposure: 1.0,
+                      shadowSoftness: 0,
+                      environmentImage: null,
+                      skyboxImage: null,
+                      loading: Loading.eager,
+                    ),
+                  ),
+                )
+                .animate()
+                .scale(begin: const Offset(0.5, 0.5))
+                .fadeIn(duration: 1000.ms, delay: 400.ms),
               ),
 
               const SizedBox(height: 40),
