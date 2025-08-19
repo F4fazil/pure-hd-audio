@@ -20,6 +20,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   String? _errorMessage;
   bool _isHeaderVisible = true;
   bool _isFullscreen = false;
+  Orientation? _previousOrientation;
 
   @override
   void initState() {
@@ -141,7 +142,24 @@ class _VoiceScreenState extends State<VoiceScreen> {
   Widget build(BuildContext context) {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
+    final currentOrientation = MediaQuery.of(context).orientation;
     final screenHeight = MediaQuery.of(context).size.height;
+
+    // Check if orientation changed from landscape to portrait
+    if (_previousOrientation == Orientation.landscape && 
+        currentOrientation == Orientation.portrait &&
+        !_isHeaderVisible) {
+      // Show header when returning from landscape to portrait
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _isHeaderVisible = true;
+          });
+        }
+      });
+    }
+    
+    _previousOrientation = currentOrientation;
 
     return Scaffold(
       backgroundColor: Colors.black,

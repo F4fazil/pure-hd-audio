@@ -1,4 +1,4 @@
-package com.example.realaudiohd
+package com.silentsystem.pureaudiohd
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
@@ -11,8 +11,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -22,6 +24,14 @@ class MainActivity : FlutterActivity() {
     private val BLUETOOTH_CHANNEL = "bluetooth_discovery"
     private val EQ_CHANNEL = "global_equalizer"
     private val TAG = "MainActivity"
+    
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        // Enable edge-to-edge for Android 15+ compatibility (API 35+)
+        if (Build.VERSION.SDK_INT >= 35) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
+        super.onCreate(savedInstanceState)
+    }
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var isDiscovering = false
     private var bluetoothA2dp: BluetoothA2dp? = null

@@ -9,7 +9,9 @@
       "Bash(pod install:*)",
       "WebFetch(domain:pub.dev)",
       "Bash(sed:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(keytool:*)",
+      "Bash(unzip:*)"
     ],
     "deny": []
   }

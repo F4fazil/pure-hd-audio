@@ -16,7 +16,7 @@ android {
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
     }
 
-    namespace = "com.silentsystem.realaudiohd"
+    namespace = "com.silentsystem.pureaudiohd"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -30,11 +30,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.silentsystem.realaudiohd"
+        applicationId = "com.silentsystem.pureaudiohd"
         minSdk = 21
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.1"
     }
 
     signingConfigs {

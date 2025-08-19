@@ -1,4 +1,4 @@
-package com.example.realaudiohd
+package com.silentsystem.pureaudiohd
 
 import android.app.*
 import android.content.Context
